@@ -1,5 +1,10 @@
 import java.awt.Canvas;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
 import javax.swing.JFrame;
 
 public class App extends Canvas implements Runnable{
@@ -8,9 +13,10 @@ public class App extends Canvas implements Runnable{
     private Thread thread;
 
     public static JFrame frame;
-    private final int width = 160;
-    private final int height = 120;
-    private final int scale = 7;
+    private final int width = 240;
+    private final int height = 160;
+    private final int scale = 3;
+    private BufferedImage image;
     
     public App(){
         this.setPreferredSize(new Dimension(width*scale,height*scale));
@@ -21,6 +27,9 @@ public class App extends Canvas implements Runnable{
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
+
+        image = new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
+
     }
 
     public static void main(String[] args) throws Exception {
@@ -54,6 +63,7 @@ public class App extends Canvas implements Runnable{
             }
 
         }
+        stop();
     }
 
     public synchronized void start(){
@@ -63,8 +73,12 @@ public class App extends Canvas implements Runnable{
     }
 
     public synchronized void stop(){
-        thread = new Thread(this);
-        thread.start();
+        isRunning = false;
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            
+        }
     }
 
     public void update(){
@@ -72,6 +86,28 @@ public class App extends Canvas implements Runnable{
     }
 
     public void render(){
-        //System.out.println("render");
+        BufferStrategy bs = this.getBufferStrategy();
+        if  (bs == null){
+            this.createBufferStrategy(3);
+            return;
+        }
+        Graphics g = image.getGraphics();
+        //REFRESH NA TELA... LIMPANDO TUDO COM FUNDO DA TELA
+        g.setColor(new Color(12,12,12)); //cor de fundo da tela
+        g.fillRect(0, 0, width, height); //desenhado um retangulo do tamanho da tela
+
+        /* EXEMPLO DE COMO MUDAR ESSE FUNDO (COM TEXTO)
+        g.setColor(Color.CYAN);
+        g.fillRect(80, 40, width/3, height/3);
+
+        g.setColor(Color.MAGENTA);
+        g.setFont(new Font("Arial",Font.BOLD, 20));
+        g.drawString("Game1", 85, 60);
+        */
+        
+        g = bs.getDrawGraphics();
+        g.drawImage(image, 0, 0, width*scale, height*scale, null); //jogando desenho na tela
+        bs.show();
+
     }
 }
